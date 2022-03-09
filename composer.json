@@ -1,0 +1,30 @@
+{
+  "name": "hyperion/hyperion-loader",
+  "type": "wordpress-muplugin",
+  "description": "Loader for hyperion",
+  "authors": [
+    {
+      "name": "Grégory COLLIN",
+      "email": "gregory@d4rk0s.net"
+    }
+  ],
+  "repositories": [
+    {
+      "type" : "vcs",
+      "url" : "git@github.com:wp-hyperion/hyperion-loader.git"
+    }
+  ],
+  "require": {
+    "php" : ">=8.1",
+    "ext-apcu": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Hyperion\\Loader\\": "src/"
+    }
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-latest",
+    "phpmd/phpmd": "^2.9"
+  }
+}
