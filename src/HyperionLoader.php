@@ -38,7 +38,8 @@ class HyperionLoader
     {
         $classMap = $this->loader->getClassMap();
         $results = array_filter($classMap, static function ($key) use ($namespace) {
-            return strpos($key, $namespace) === 0;
+            $key = substr($key, 0, strlen($key) - (int) strpos(strrev($key), "\\") - 1);
+            return $key === $namespace;
         }, ARRAY_FILTER_USE_KEY);
 
         return array_keys($results);
@@ -64,6 +65,7 @@ class HyperionLoader
     /**
      * @param RegisteredModuleCollection $registeredModules
      * @throws \ReflectionException
+     * @todo : Attention boucle trop importante ! ==> monter en compétence sur blackfire
      */
     private function computeDependencies(RegisteredModuleCollection $registeredModules)
     {
