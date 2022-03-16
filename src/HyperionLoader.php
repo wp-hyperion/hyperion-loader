@@ -4,25 +4,30 @@ namespace Hyperion\Loader;
 
 use Composer\Autoload\ClassLoader;
 use Hyperion\Loader\Service\ContainerEngine;
-use Hyperion\Loader\Collection\RegisteredModuleCollection;
+use Hyperion\Loader\Collection\AutoloadedNamespaceCollection;
 use ReflectionParameter;
+use WP_CLI;
 
 class HyperionLoader
 {
-    public const REGISTER_HYPERION_MODULE = 'hyperion_loader_register_hyperion_module';
+    public const REGISTER_AUTOLOADED_NAMESPACE = 'hyperion_loader_autoloaded_namespace';
     public const HYPERION_CONTAINER_READY = 'hyperion_loader_container_ready';
     private const DEPENDENCY_CACHE_KEY = 'hyperion_loader_dependency_cache_key';
     private ClassLoader $loader;
 
     public function init()
     {
-        $registeredModules = new RegisteredModuleCollection();
-        $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../vendor/autoload.php');
+        $autoloadedNamespaces = new AutoloadedNamespaceCollection();
+        if (class_exists(WP_CLI::class)) {
+            $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../../vendor/autoload.php');
+        } else {
+            $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../vendor/autoload.php');
+        }
 
-        do_action(self::REGISTER_HYPERION_MODULE, $registeredModules);
+        do_action(self::REGISTER_AUTOLOADED_NAMESPACE, $autoloadedNamespaces);
 
         if (false === apcu_exists(self::DEPENDENCY_CACHE_KEY)) {
-            $this->computeDependencies($registeredModules);
+            $this->computeDependencies($autoloadedNamespaces);
         }
 
         $containerEngine = new ContainerEngine();
@@ -63,15 +68,14 @@ class HyperionLoader
     }
 
     /**
-     * @param RegisteredModuleCollection $registeredModules
+     * @param AutoloadedNamespaceCollection $registeredModules
      * @throws \ReflectionException
-     * @todo : Attention boucle trop importante ! ==> monter en compétence sur blackfire
      */
-    private function computeDependencies(RegisteredModuleCollection $registeredModules)
+    private function computeDependencies(AutoloadedNamespaceCollection $autoloadedNamespaceCollection)
     {
         $dependencies = [];
-        foreach ($registeredModules->getRegisteredModules() as $registeredModuleNamespace) {
-            $classesInNamespace = $this->getAllInstanciableClassesFromDir($registeredModuleNamespace);
+        foreach ($autoloadedNamespaceCollection->getNamespaces() as $namespaces) {
+            $classesInNamespace = $this->getAllInstanciableClassesFromDir($namespaces);
             foreach ($classesInNamespace as $classNamespace) {
                 $this->recursiveConstructorServicesDependencies($classNamespace, $dependencies);
             }
