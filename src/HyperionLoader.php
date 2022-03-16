@@ -18,7 +18,7 @@ class HyperionLoader
     public function init()
     {
         $autoloadedNamespaces = new AutoloadedNamespaceCollection();
-        if (class_exists(WP_CLI::class)) {
+        if (defined('WP_CLI')) {
             $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../../vendor/autoload.php');
         } else {
             $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../vendor/autoload.php');
