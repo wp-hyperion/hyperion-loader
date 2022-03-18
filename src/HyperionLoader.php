@@ -13,15 +13,15 @@ class HyperionLoader
     public const REGISTER_AUTOLOADED_NAMESPACE = 'hyperion_loader_autoloaded_namespace';
     public const HYPERION_CONTAINER_READY = 'hyperion_loader_container_ready';
     private const DEPENDENCY_CACHE_KEY = 'hyperion_loader_dependency_cache_key';
-    private ClassLoader $loader;
+    private static ClassLoader $loader;
 
     public function init()
     {
         $autoloadedNamespaces = new AutoloadedNamespaceCollection();
         if (defined('WP_CLI')) {
-            $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../../vendor/autoload.php');
+            self::$loader = require($_SERVER['DOCUMENT_ROOT'].'/../../vendor/autoload.php');
         } else {
-            $this->loader = require($_SERVER['DOCUMENT_ROOT'].'/../vendor/autoload.php');
+            self::$loader = require($_SERVER['DOCUMENT_ROOT'].'/../vendor/autoload.php');
         }
 
         do_action(self::REGISTER_AUTOLOADED_NAMESPACE, $autoloadedNamespaces);
@@ -36,12 +36,17 @@ class HyperionLoader
         do_action(self::HYPERION_CONTAINER_READY, $containerEngine);
     }
 
+    public static function getLoader() : ClassLoader
+    {
+        return self::$loader;
+    }
+
     /**
      * Récupère toutes les classes qui sont gérées dans ce namespace
      */
     private function getAllInstanciableClassesFromDir(string $namespace) : array
     {
-        $classMap = $this->loader->getClassMap();
+        $classMap = self::$loader->getClassMap();
         $results = array_filter($classMap, static function ($key) use ($namespace) {
             $key = substr($key, 0, strlen($key) - (int) strpos(strrev($key), "\\") - 1);
             return $key === $namespace;
